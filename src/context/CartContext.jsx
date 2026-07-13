@@ -1,6 +1,5 @@
 import { createContext, useContext, useState } from "react";
 import { getProductById } from "../data/products";
-
 const CartContext = createContext(null);
 
 export default function CartProvider({ children }){
@@ -27,8 +26,40 @@ export default function CartProvider({ children }){
             product: getProductById(item.id)
         })).filter(item => item.product);
     }
+
+    function removeFromCart(productId){
+        setCartItems(cartItems.filter((item) => item.id !== productId))
+    }
+    function updateQuantity(productId, quantity){
+        if(quantity <= 0) {
+            removeFromCart(productId);
+            return;
+        }
+        setCartItems(cartItems.map((item) => item.id === productId
+            ? {...item, quantity}
+            : item
+        ));
+    }
+
+    function getCartTotal(){
+        const total = cartItems.reduce((total, item) =>{
+            const product = getProductById(item.id)
+            return total + (product ? product.price * item.quantity : 0);
+        }, 0);
+        return total;
+    }
+
+    function clearCart(){
+        setCartItems([]);
+    }
     return <CartContext.Provider
-            value={{ cartItems, addToCart, getCartItemsWithProducts }}>{children}
+            value={{ cartItems,
+                addToCart,
+                getCartItemsWithProducts,
+                removeFromCart,
+                updateQuantity,
+                getCartTotal,
+                clearCart, }}>{children}
            </CartContext.Provider>
 }
 
